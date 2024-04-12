@@ -15,7 +15,7 @@ private:
     long int col_num;
     T** data;
 public:
-    Matrix() : Matrix(0, 0) {};
+    Matrix() : row_num(0), col_num(0), Matrix(0, 0) {};
     Matrix(long int m, long int n) {
         row_num = m;
         col_num = n;
@@ -34,6 +34,9 @@ public:
         delete[] data;
     }
 
+    /**
+     * Initializes the matrix with values from the user input.
+     */
     void initialize() {
         for (unsigned int i = 0; i < row_num; ++i) {
             for (unsigned int j = 0; j < col_num; ++j) {
@@ -41,6 +44,7 @@ public:
             }
         }
     }
+
     __attribute__((unused)) void setRowNum(long int m) {
         if (m > 0) {
             row_num = m;
@@ -72,6 +76,10 @@ public:
             throw std::out_of_range("Error: Out of range while getting element");
         }
     }
+    /**
+     * Gets the determinant of the matrix. If the matrix is not square, throws an exception.
+     * @return Returns the determinant of the matrix.
+     */
     T getDeterminant() {
         T sum = 0;
         if (row_num == col_num) {
@@ -90,7 +98,6 @@ public:
         return sum;
     }
 
-    // Интерфейс
     void print() const {
         if (row_num > 0 && col_num > 0) {
             for (unsigned int i = 0; i < row_num; ++i) {
@@ -102,11 +109,10 @@ public:
             }
         }
     }
-
     /**
-     * Метод чтения из файла реализован без C++ <string> с помощью обработки каждой строки.
-     * Обработка происходит напрямую с помощью сдвига указателя.
+     * Reads matrix from data.txt file.
      */
+
     void readFromFile() {
         std::ifstream file("data.txt");
         if (!file) {
@@ -140,9 +146,7 @@ public:
         }
         file.close();
     }
-
     void writeToFile() {
-        std::string type_check = typeid(T).name();
         std::ofstream file("data.txt");
         if (file.is_open()) {
             file << row_num << "," << col_num << "," << std::endl;
@@ -158,14 +162,6 @@ public:
         }
     }
 
-    // Операторы
-    /**
-     * Присваивание значений одной матрицы другой реализовано с помощью
-     * полного удаления содержимого изначальной матрицы и повторного
-     * создания двумерного массива нового размера с последующим
-     * присвоением соответствующих значений
-     * @param second Матрица, содержимое которой присваивается матрице, использующей оператор равенства
-     */
     void operator=(const Matrix &second) { // NOLINT
         if (!((this == &second) || (row_num == second.row_num && col_num == second.col_num && data == second.data))) {
             for (unsigned int i = 0; i < row_num; ++i)
@@ -186,8 +182,6 @@ public:
             }
         }
     }
-
-    // В операторах присваивания реализованы проверки выхода за пределы матрицы
     void operator+(const Matrix &second) const {
         if (row_num == second.row_num and col_num == second.col_num) {
             for (unsigned int i = 0; i < row_num; ++i) {
@@ -235,13 +229,9 @@ public:
             }
         }
     }
-
-    // Операторы-ссылки на обычные операторы присваивания выше
     void operator*=(const Matrix &second) const { *this * second; }
     void operator*=(double factor) const { if (factor != 1.0) *this * factor; }
     void operator+=(const Matrix &second) const { *this + second; }
-
-    // Операторы проверки равенства/неравенства матрицы и матрицы, матрицы и скаляра
     bool operator==(const Matrix &second) {
         bool flag = true;
         if (row_num == second.row_num && col_num == second.col_num) {
@@ -254,7 +244,7 @@ public:
         }
         return false;
     }
-    bool operator!=(const Matrix &second) { return !(*this == second); }
+    bool operator!=(const Matrix &second) { return !(*this == second); } // NOLINT
     bool operator==(double scalar) {
         bool flag = true;
         double num = data[0][0];
@@ -271,15 +261,9 @@ public:
         }
         return flag;
     }
-    bool operator!=(double scalar) { return !(*this == scalar); }
-
+    bool operator!=(double scalar) { return !(*this == scalar); } // NOLINT
     /**
-     * Нахождение обратной матрицы реализовано с использованием формулы:
-     * A^-1 = adj(A) / det(A)
-     * Сначала проверяется, равен ли определитель нулю, в случае, если он не равен,
-     * выводится, что обратной матрицы не существует.
-     * В обратном случае с помощью метода makeAdjoint строится присоединённая матрица,
-     * далее выводится обратная матрица.
+     * Calculates the inverse of the matrix using the adjoint matrix and the determinant.
      */
     void operator!() {
         Matrix Inverse(row_num, col_num);
@@ -295,7 +279,12 @@ public:
             std::cerr << "Inverse matrix doesn't exist.\n";
         }
     }
-    // Элементарные преобразования
+
+    /**
+     * Performs first type elementary conversion on the matrix.
+     * @param i1 Index of the first row.
+     * @param i2 Index of the second row.
+     */
     __attribute__((unused)) void ElementaryConversion1(long int i1, long int i2) {
         if (i1 <= row_num && i2 <= row_num && i1 > 0 && i2 > 0)
             this->swapLines(i1, i2);
@@ -303,6 +292,11 @@ public:
             throw std::out_of_range("Error: Out of bounds while doing elementary conversion 1");
         }
     }
+    /**
+     * Performs second type elementary conversion on the matrix.
+     * @param i Index of the row.
+     * @param multiplier Multiplier.
+     */
     __attribute__((unused)) void ElementaryConversion2(long int i, double multiplier) {
         if (i <= row_num) {
             for (unsigned int j = 0; j <= col_num; j++) {
@@ -312,6 +306,12 @@ public:
             throw std::out_of_range("Error: Out of bounds while doing elementary conversion 2");
         }
     }
+    /**
+     * Performs third type elementary conversion on the matrix.
+     * @param i1 Index of the first row.
+     * @param i2 Index of the second row.
+     * @param multiplier Multiplier.
+     */
     __attribute__((unused)) void ElementaryConversion3(long int i1, long int i2, double multiplier) {
         if (i1 <= row_num && i2 <= row_num && i1 > 0 && i2 > 0) {
             for (unsigned int j = 0; j < col_num; j++) {
@@ -322,7 +322,6 @@ public:
         }
     }
 private:
-    // Служебные функции
     void symmetricSwapElements(long int i, long int j) {
         double temp = data[i][j];
         data[i][j] = data[j][i];
@@ -335,8 +334,8 @@ private:
     }
 
     /**
-     * Метод преобразует одномерное представление матрицы в двумерный массив
-     * @param a Массив, являющийся одномерным представлением двумерной матрицы
+     * Transforms one-dimensional array into two-dimensional matrix.
+     * @param a Array representing matrix.
      */
     void twodify(const double *a) {
         unsigned int k = 0;
@@ -347,6 +346,7 @@ private:
             }
         }
     }
+
     void transpose() {
         if (row_num == col_num) {
             for (unsigned int i = 0; i < row_num; ++i) {
@@ -359,7 +359,10 @@ private:
             std::cerr << "Error: Transposing not square matrices is not supported\n";
         }
     }
-    // Методы нахождения вспомогательных матриц
+
+    /**
+     * @return Returns adjoint matrix of the current matrix.
+     */
     Matrix makeAdjoint() {
         Matrix Adjoint(row_num, col_num);
         for (unsigned int i = 0; i < row_num; ++i) {
