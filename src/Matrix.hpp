@@ -1,24 +1,27 @@
 #ifndef CPP_HOMEWORK_1_MATRIX_HPP
 #define CPP_HOMEWORK_1_MATRIX_HPP
 
+#include <functional>
 
 #include <iostream>
 #include <fstream>
 #include <cstring>
+#include <sstream>
 
+template<typename T, typename = typename std::enable_if<std::is_arithmetic<T>::value>::type>
 class Matrix {
 private:
     long int row_num;
     long int col_num;
-    double **data;
+    T** data;
 public:
     Matrix() : Matrix(0, 0) {};
     Matrix(long int m, long int n) {
         row_num = m;
         col_num = n;
-        data = new double *[row_num];
+        data = new T*[row_num];
         for (unsigned int i = 0; i < row_num; ++i) {
-            data[i] = new double[col_num];
+            data[i] = new T[col_num];
             for (unsigned int j = 0; j < col_num; ++j) {
                 data[i][j] = 0;
             }
@@ -52,7 +55,7 @@ public:
             throw std::out_of_range("Error: Out of range while setting col size");
         }
     }
-    __attribute__((unused)) void setElement(long int i, long int j, double val) {
+    __attribute__((unused)) void setElement(long int i, long int j, T val) {
         if (i <= row_num && j <= col_num && i >= 0 && j >= 0) {
             data[i][j] = val;
         } else {
@@ -62,15 +65,15 @@ public:
 
     __attribute__((unused)) long int getRowNum() const { return row_num; }
     __attribute__((unused)) long int getColNum() const { return col_num; }
-    double getElement(long int i, long int j) const {
+    T getElement(long int i, long int j) const {
         if (i <= row_num && j <= col_num && i >= 0 && j >= 0) {
             return data[i][j];
         } else {
             throw std::out_of_range("Error: Out of range while getting element");
         }
     }
-    double getDeterminant() {
-        double sum = 0;
+    T getDeterminant() {
+        T sum = 0;
         if (row_num == col_num) {
             if (row_num == 1) {
                 return data[0][0];
@@ -105,57 +108,41 @@ public:
      * Обработка происходит напрямую с помощью сдвига указателя.
      */
     void readFromFile() {
-        FILE *file = fopen("data.txt", "r");
-        if (file != nullptr) {
-            char line[100];
-            char subline[100];
-            int flag = 0;
-            int i = 0;
-            while (fgets(line, sizeof(line), file) != nullptr) {
-                if (flag == 0) {
-                    char *ptr = line;
-                    while (*ptr != ',') {
-                        *ptr++;
-                    }
-                    *ptr = '\0';
-                    strcpy(subline, line);
-                    row_num = atoi(subline); //NOLINT
+        std::ifstream file("data.txt");
+        if (!file) {
+            throw std::runtime_error("Error: Couldn't open file");
+        }
 
-                    ptr += 1;
-                    strcpy(subline, ptr);
-                    col_num = atoi(subline); //NOLINT
-
-                    if (col_num > 0 && row_num > 0) {
-                        Matrix temp(row_num, col_num);
-                        *this = temp;
-                        flag = 1;
-                    } else {
-                        throw std::out_of_range("Error: bad indexes");
-                    }
+        std::string line;
+        int i = 0;
+        while (std::getline(file, line)) {
+            if (i == 0) {
+                std::stringstream ss(line);
+                ss >> row_num;
+                ss.ignore(1, ',');
+                ss >> col_num;
+                if (col_num > 0 && row_num > 0) {
+                    Matrix temp(row_num, col_num);
+                    *this = temp;
                 } else {
-                    for (unsigned int j = 0; j < col_num; j++) {
-                        char *ptr = line;
-                        while (*ptr != ',') {
-                            *ptr++;
-                        }
-                        strcpy(subline, line);
-                        if (*subline) {
-                            data[i][j] = atof(subline); //NOLINT - для исправления варнинга предлагает юзать stl!
-                        }
-
-                        if (*ptr == ',') {
-                            ptr += 1;
-                        }
-                        strcpy(line, ptr);
-                    }
-                    i += 1;
+                    throw std::out_of_range("Error: bad indexes");
+                }
+            } else {
+                std::stringstream ss(line);
+                for (unsigned int j = 0; j < col_num; j++) {
+                    T value;
+                    ss >> value;
+                    ss.ignore(1, ',');
+                    data[i-1][j] = value;
                 }
             }
-            fclose(file);
+            i += 1;
         }
+        file.close();
     }
 
     void writeToFile() {
+        std::string type_check = typeid(T).name();
         std::ofstream file("data.txt");
         if (file.is_open()) {
             file << row_num << "," << col_num << "," << std::endl;
@@ -186,9 +173,9 @@ public:
             delete[] data;
             row_num = second.row_num;
             col_num = second.col_num;
-            data = new double *[row_num];
+            data = new T *[row_num];
             for (unsigned int i = 0; i < row_num; ++i) {
-                data[i] = new double[col_num];
+                data[i] = new T[col_num];
                 if (data[i]) {
                     for (unsigned int j = 0; j < col_num; ++j) {
                         data[i][j] = second.data[i][j];
