@@ -10,12 +10,13 @@
 
 template<typename T, typename = typename std::enable_if<std::is_arithmetic<T>::value>::type>
 class Matrix {
-private:
+ private:
     long int row_num;
     long int col_num;
     T** data;
-public:
-    Matrix() : row_num(0), col_num(0), Matrix(0, 0) {};
+
+ public:
+    Matrix() : row_num(0), col_num(0), Matrix(0, 0) {}
     Matrix(long int m, long int n) {
         row_num = m;
         col_num = n;
@@ -321,7 +322,7 @@ public:
             throw std::out_of_range("Error: Out of bounds while doing elementary conversion 3");
         }
     }
-private:
+ private:
     void symmetricSwapElements(long int i, long int j) {
         double temp = data[i][j];
         data[i][j] = data[j][i];
@@ -391,4 +392,4 @@ private:
 };
 
 
-#endif //CPP_HOMEWORK_1_MATRIX_HPP
+#endif // CPP_HOMEWORK_1_MATRIX_HPP
