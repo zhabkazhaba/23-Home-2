@@ -112,6 +112,15 @@ class Matrix {
         }
         return result;
     }
+    static Matrix zero(long int m, long int n) {
+        Matrix<T> result(m,n);
+        for (unsigned int i = 0; i < m; ++i) {
+            for (unsigned int j = 0; j < n; ++j) {
+                result.data[i][j] = 0;
+            }
+        }
+        return result;
+    }
 
     __attribute__((unused)) void setRowNum(long int m) {
         if (m > 0) {
