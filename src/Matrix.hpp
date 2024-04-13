@@ -99,6 +99,20 @@ class Matrix {
         }
     }
 
+    static Matrix id(long int n) {
+        Matrix<T> result(n,n);
+        for (unsigned int i = 0; i < n; ++i) {
+            for (unsigned int j = 0; j < n; ++j) {
+                if (i == j) {
+                    result.data[i][j] = 1;
+                } else {
+                    result.data[i][j] = 0;
+                }
+            }
+        }
+        return result;
+    }
+
     __attribute__((unused)) void setRowNum(long int m) {
         if (m > 0) {
             row_num = m;
