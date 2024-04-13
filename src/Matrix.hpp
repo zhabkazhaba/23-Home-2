@@ -16,7 +16,7 @@ class Matrix {
     T** data;
 
  public:
-    Matrix() : row_num(0), col_num(0), Matrix(0, 0) {}
+    Matrix() : row_num(0), col_num(0), data(nullptr) {}
     Matrix(long int m, long int n) {
         row_num = m;
         col_num = n;
@@ -27,6 +27,59 @@ class Matrix {
                 data[i][j] = 0;
             }
         }
+    }
+    Matrix(const std::string filename) { // NOLINT
+        std::ifstream file(filename);
+        if (!file) {
+            throw std::runtime_error("Error: Couldn't open file");
+        }
+        std::string line;
+        int i = 0;
+        while (std::getline(file, line)) {
+            if (i == 0) {
+                std::stringstream ss(line);
+                ss >> row_num;
+                ss.ignore(1, ',');
+                ss >> col_num;
+                if (col_num > 0 && row_num > 0) {
+                    Matrix temp(row_num, col_num);
+                    *this = temp;
+                } else {
+                    throw std::out_of_range("Error: bad indexes");
+                }
+            } else {
+                std::stringstream ss(line);
+                for (unsigned int j = 0; j < col_num; j++) {
+                    T value;
+                    ss >> value;
+                    ss.ignore(1, ',');
+                    data[i-1][j] = value;
+                }
+            }
+            i += 1;
+        }
+        file.close();
+    }
+    Matrix(const Matrix &second) {
+        row_num = second.row_num;
+        col_num = second.col_num;
+        data = new T*[row_num];
+        for (unsigned int i = 0; i < row_num; ++i) {
+            data[i] = new T[col_num];
+            if (data[i]) {
+                for (unsigned int j = 0; j < col_num; ++j) {
+                    data[i][j] = second.data[i][j];
+                }
+            } else {
+                throw std::runtime_error("Error: Something bad happened when allocating memory");
+            }
+        }
+    }
+    Matrix(Matrix &&second) noexcept {
+        row_num = second.row_num;
+        col_num = second.col_num;
+        data = second.data;
+        second.data = nullptr;
     }
     ~Matrix() {
         for (unsigned int i = 0; i < row_num; ++i) {
@@ -115,37 +168,8 @@ class Matrix {
      */
 
     void readFromFile() {
-        std::ifstream file("data.txt");
-        if (!file) {
-            throw std::runtime_error("Error: Couldn't open file");
-        }
-
-        std::string line;
-        int i = 0;
-        while (std::getline(file, line)) {
-            if (i == 0) {
-                std::stringstream ss(line);
-                ss >> row_num;
-                ss.ignore(1, ',');
-                ss >> col_num;
-                if (col_num > 0 && row_num > 0) {
-                    Matrix temp(row_num, col_num);
-                    *this = temp;
-                } else {
-                    throw std::out_of_range("Error: bad indexes");
-                }
-            } else {
-                std::stringstream ss(line);
-                for (unsigned int j = 0; j < col_num; j++) {
-                    T value;
-                    ss >> value;
-                    ss.ignore(1, ',');
-                    data[i-1][j] = value;
-                }
-            }
-            i += 1;
-        }
-        file.close();
+        Matrix tmp = ("data.txt");
+        *this = tmp;
     }
     void writeToFile() {
         std::ofstream file("data.txt");
