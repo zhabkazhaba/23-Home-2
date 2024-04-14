@@ -28,28 +28,34 @@ class Matrix {
             }
         }
     }
-    Matrix(const std::string filename) { // NOLINT
+    explicit Matrix(const char *filename) : row_num(0), col_num(0), data(nullptr) {
         std::ifstream file(filename);
         if (!file) {
             throw std::runtime_error("Error: Couldn't open file");
         }
         std::string line;
         int i = 0;
+        int row_num_tmp = 0;
+        int col_num_tmp = 0;
         while (std::getline(file, line)) {
             if (i == 0) {
                 std::stringstream ss(line);
-                ss >> row_num;
+                ss >> row_num_tmp;
                 ss.ignore(1, ',');
-                ss >> col_num;
-                if (col_num > 0 && row_num > 0) {
-                    Matrix temp(row_num, col_num);
-                    *this = temp;
+                ss >> col_num_tmp;
+                if (col_num_tmp > 0 && row_num_tmp > 0) {
+                    row_num = row_num_tmp;
+                    col_num = col_num_tmp;
+                    data = new T*[row_num];
+                    for (unsigned int l = 0; l < row_num; ++l) {
+                        data[l] = new T[col_num];
+                    }
                 } else {
                     throw std::out_of_range("Error: bad indexes");
                 }
             } else {
                 std::stringstream ss(line);
-                for (unsigned int j = 0; j < col_num; j++) {
+                for (unsigned int j = 0; j < col_num_tmp; j++) {
                     T value;
                     ss >> value;
                     ss.ignore(1, ',');
@@ -99,7 +105,7 @@ class Matrix {
         }
     }
 
-    static Matrix id(long int n) {
+    static Matrix<T> id(long int n) {
         Matrix<T> result(n,n);
         for (unsigned int i = 0; i < n; ++i) {
             for (unsigned int j = 0; j < n; ++j) {
@@ -112,7 +118,7 @@ class Matrix {
         }
         return result;
     }
-    static Matrix zero(long int m, long int n) {
+    static Matrix<T> zero(long int m, long int n) {
         Matrix<T> result(m,n);
         for (unsigned int i = 0; i < m; ++i) {
             for (unsigned int j = 0; j < n; ++j) {
@@ -191,7 +197,7 @@ class Matrix {
      */
 
     void readFromFile() {
-        Matrix tmp = ("data.txt");
+        Matrix<T> tmp("data.txt");
         *this = tmp;
     }
     void writeToFile() {
@@ -211,7 +217,7 @@ class Matrix {
     }
 
     void operator=(const Matrix &second) { // NOLINT
-        if (!((this == &second) || (row_num == second.row_num && col_num == second.col_num && data == second.data))) {
+        if (this != &second && this->data != nullptr) {
             for (unsigned int i = 0; i < row_num; ++i)
                 delete[] data[i];
             delete[] data;
@@ -238,7 +244,7 @@ class Matrix {
                 }
             }
         } else {
-            std::cerr << "Error: Matrices have to be same size";
+            std::cerr << "Error: Matrices have to be same size\n";
         }
     }
     void operator-(const Matrix &second) const {
